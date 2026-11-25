@@ -1,0 +1,1855 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Pharmasia Hisab · Premium Territory Accounting</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          colors: {
+            slate: {
+              850: '#151e32',
+              900: '#0f172a',
+              950: '#090d16'
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <link id="dynamicManifestLink" rel="manifest" />
+  <meta name="theme-color" content="#10b981" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Pharmasia Hisab" />
+  <style>
+    * { font-family: 'Inter', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background-color: #090d16; color: #f8fafc; overflow-x: hidden; }
+    
+    /* Custom Glassmorphism & Subtle Glows */
+    .glass {
+      background: rgba(21, 30, 50, 0.72);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-card {
+      background: linear-gradient(145deg, rgba(30, 41, 59, 0.75) 0%, rgba(15, 23, 42, 0.85) 100%);
+      backdrop-filter: blur(12px);
+    <!-- Number input clean look -->
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+  </style>
+  <script type="module">
+    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    window.__PHARMASIA_FIREBASE__ = {
+      initializeApp,
+      getApps,
+      getAuth,
+      signInAnonymously,
+      onAuthStateChanged,
+      getFirestore,
+      doc,
+      setDoc,
+      onSnapshot
+    };
+    window.dispatchEvent(new Event("pharmasia-firebase-ready"));
+  </script>
+</head>
+<body class="pb-28 md:pb-12 selection:bg-emerald-500/30 selection:text-emerald-200">
+
+  <!-- TOP STICKY GLASS HEADER -->
+  <header class="sticky top-0 z-40 glass border-b border-slate-800/80 px-4 py-3">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <!-- Brand Identity -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 via-teal-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-emerald-500/20 font-extrabold text-slate-950 text-lg">
+          P
+        </div>
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h1 class="text-base sm:text-lg font-extrabold tracking-tight text-white">Pharmasia Hisab</h1>
+            <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">PWA</span>
+            <button id="syncStatusBadge" onclick="openCloudModal()" title="Configure PC & Phone Auto Sync" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-800/90 text-slate-300 border border-slate-700 hover:border-emerald-500/50 transition cursor-pointer">
+              <span id="syncStatusDot" class="w-2 h-2 rounded-full bg-amber-400"></span>
+              <span id="syncStatusText">Local Only</span>
+            </button>
+          </div>
+          <p class="text-[11px] text-slate-400">Md Zunaed · Ruhitpur Territory</p>
+        </div>
+      </div>
+
+      <!-- Desktop Navigation Pills -->
+      <nav class="hidden md:flex items-center gap-1.5 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
+        <button onclick="switchTab('dashboard')" data-tab="dashboard" class="nav-pill px-4 py-2 rounded-lg text-xs font-semibold transition-all bg-emerald-500 text-slate-950 shadow">Dashboard</button>
+        <button onclick="switchTab('invoices')" data-tab="invoices" class="nav-pill px-4 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all">Parties & Collection</button>
+        <button onclick="switchTab('honorarium')" data-tab="honorarium" class="nav-pill px-4 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all">Honorarium & Gavicool</button>
+        <button onclick="switchTab('sales')" data-tab="sales" class="nav-pill px-4 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all">Sales & Profit</button>
+      </nav>
+
+      <!-- Month Switcher & Data Menu -->
+      <div class="flex items-center gap-2">
+        <button id="installAppBtn" onclick="triggerInstallApp()" class="hidden items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-extrabold shadow-lg shadow-emerald-500/20 transition active:scale-95">
+          <span>Install App</span>
+        </button>
+
+        <button onclick="openCloudModal()" title="PC & Phone Auto Sync" class="px-2.5 py-2 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/30 text-indigo-300 text-xs font-bold transition active:scale-95 flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          <span class="hidden sm:inline">Sync</span>
+        </button>
+
+        <div class="relative">
+          <select id="monthSelect" onchange="switchMonth(this.value)" class="appearance-none bg-slate-900 border border-slate-700/80 hover:border-emerald-500/50 text-white text-xs sm:text-sm font-semibold rounded-xl pl-3 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 cursor-pointer transition">
+          </select>
+          <svg class="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+
+        <button onclick="openNewMonthModal()" title="Create New Month" class="p-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-emerald-400 transition active:scale-95">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 4v16m8-8H4"/></svg>
+        </button>
+
+        <button onclick="openSettingsModal()" title="Backup, Export & Settings" class="p-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-slate-300 transition active:scale-95">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- TOAST NOTIFICATION BANNER -->
+  <div id="toast" class="fixed top-20 right-4 z-50 transform translate-x-full opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="glass border border-emerald-500/40 text-emerald-300 px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2 text-xs font-semibold">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+      <span id="toastMsg">Saved!</span>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 pt-5">
+
+    <!-- ==================== TAB 1: DASHBOARD ==================== -->
+    <section id="view-dashboard" class="animate-view space-y-5">
+      
+      <!-- Hero Target Achievement Banner -->
+      <div class="glass-card rounded-2xl p-5 sm:p-6 relative overflow-hidden">
+        <div class="absolute -right-12 -top-12 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -left-12 -bottom-12 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+          <div>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-400">Monthly Sales Target</span>
+            <div class="flex items-baseline gap-2.5 mt-1">
+              <h2 id="heroSalesVal" class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">৳0</h2>
+              <span class="text-xs sm:text-sm text-slate-400">of</span>
+              <div class="inline-flex items-center bg-slate-900/90 border border-slate-700/80 rounded-lg px-2.5 py-1">
+                <span class="text-xs text-slate-400 mr-1">৳</span>
+                <input id="targetInput" type="number" onchange="updateTarget(this.value)" class="w-24 bg-transparent text-xs sm:text-sm font-bold text-emerald-300 focus:outline-none text-right" />
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-3 self-start sm:self-center">
+            <div class="text-right">
+              <div id="heroPctBadge" class="text-xl sm:text-2xl font-extrabold text-emerald-400">0.0%</div>
+              <div id="heroRemainingText" class="text-[11px] text-slate-400">Remaining: ৳0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Animated Progress Bar -->
+        <div class="w-full h-3 bg-slate-900/95 rounded-full overflow-hidden p-0.5 border border-slate-800">
+          <div id="heroProgressBar" class="h-full rounded-full bg-gradient-to-r from-indigo-500 via-teal-400 to-emerald-400 transition-all duration-500" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- 4 Core KPI Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" id="kpiGrid"></div>
+
+      <!-- Middle Grid: Closing & My Amount + Visual Honorarium Chart -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
+        
+        <!-- Closing & My Amount Card -->
+        <div class="lg:col-span-5 glass-card rounded-2xl p-5 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+                Closing & My Amount
+              </h3>
+              <span class="text-[11px] text-slate-400 bg-slate-800/80 px-2.5 py-0.5 rounded-full">Live Formula</span>
+            </div>
+            <div id="closingBreakdown" class="space-y-2.5"></div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-800/80 text-[11px] text-slate-400 flex justify-between">
+            <span>Formula: Party Dues − Credit − Cash Due</span>
+            <span class="text-emerald-400 font-medium">Auto-synced</span>
+          </div>
+        </div>
+
+        <!-- Visual SVG Chart: Honorarium Pharmacy Progress -->
+        <div class="lg:col-span-7 glass-card rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="text-sm font-bold text-white">Honorarium & Top Dues Overview</h3>
+              <p class="text-[11px] text-slate-400">Target achievement across key pharmacies</p>
+            </div>
+            <button onclick="switchTab('honorarium')" class="text-xs font-semibold text-emerald-400 hover:text-emerald-300">Details →</button>
+          </div>
+          <div id="svgChartContainer" class="w-full"></div>
+        </div>
+      </div>
+
+      <!-- Quick Outstanding Dues List -->
+      <div class="glass-card rounded-2xl p-5">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="text-sm font-bold text-white">Top Outstanding Party Dues</h3>
+            <p class="text-[11px] text-slate-400">Tap any party to record today's collection immediately</p>
+          </div>
+          <button onclick="switchTab('invoices')" class="text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-xl border border-slate-700 transition">View All</button>
+        </div>
+        <div id="dashDuesList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: PARTIES & COLLECTION ==================== -->
+    <section id="view-invoices" class="hidden animate-view space-y-4">
+      
+      <!-- Summary Strip + Search & Filter -->
+      <div class="glass-card rounded-2xl p-4 sm:p-5 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-base font-extrabold text-white">Party Ledger & Daily Collection</h2>
+            <p class="text-xs text-slate-400">Tap any pharmacy card to collect dues in 1 click</p>
+          </div>
+          <div class="flex items-center gap-2 text-xs">
+            <div class="bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-xl">
+              <span class="text-slate-400">Collected: </span>
+              <span id="invStripCol" class="font-bold text-emerald-400">৳0</span>
+            </div>
+            <div class="bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-xl">
+              <span class="text-slate-400">Dues: </span>
+              <span id="invStripDue" class="font-bold text-rose-400">৳0</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-2.5">
+          <div class="relative flex-1">
+            <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input id="searchCust" type="text" oninput="renderInvoices()" placeholder="Search pharmacy name or invoice #..." class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500" />
+          </div>
+          <div class="flex items-center gap-1.5 bg-slate-900/90 p-1 rounded-xl border border-slate-800 self-start">
+            <button onclick="setInvFilter('all')" data-filter="all" class="filter-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500 text-slate-950">All</button>
+            <button onclick="setInvFilter('due')" data-filter="due" class="filter-pill px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white">Has Dues</button>
+            <button onclick="setInvFilter('paid')" data-filter="paid" class="filter-pill px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white">Cleared</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Party Cards Grid -->
+      <div id="partyCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5"></div>
+    </section>
+
+    <!-- ==================== TAB 3: HONORARIUM & GAVICOOL ==================== -->
+    <section id="view-honorarium" class="hidden animate-view space-y-5">
+      
+      <!-- Honorarium Cards -->
+      <div class="glass-card rounded-2xl p-5">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <div>
+            <h2 class="text-base font-extrabold text-white">Business Honorarium (10% Profit Eligible)</h2>
+            <p class="text-xs text-slate-400">Track pharmacy targets & add date-wise sales</p>
+          </div>
+          <div class="bg-emerald-500/15 border border-emerald-500/30 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-300">
+            10% Benefit: <span id="honTotalBenefit">৳0</span>
+          </div>
+        </div>
+        <div id="honorariumCardsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+      </div>
+
+      <!-- Gavicool 8% Box Target Tracker -->
+      <div class="glass-card rounded-2xl p-5">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <div>
+            <h2 class="text-base font-extrabold text-white">Gavicool Box Target (8% of Sales · ৳264/Box)</h2>
+            <p class="text-xs text-slate-400">Use + / − buttons to update sold boxes instantly</p>
+          </div>
+          <div class="text-xs text-slate-300 bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-xl">
+            Total Remaining: <span id="gavTotalDueBox" class="font-bold text-amber-400">0.00</span> Boxes
+          </div>
+        </div>
+        <div id="gavicoolCardsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5"></div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 4: MONTHLY SALES & PROFIT ==================== -->
+    <section id="view-sales" class="hidden animate-view space-y-5">
+      
+      <!-- Daily Credit & Cash Sales Ledger -->
+      <div class="glass-card rounded-2xl p-5">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <h2 class="text-base font-extrabold text-white">Daily Credit & Cash Sales</h2>
+            <p class="text-xs text-slate-400">Record daily credit bills, cash sales & cash paid</p>
+          </div>
+          <button onclick="openQuickModal('sale')" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs px-3.5 py-2 rounded-xl shadow-lg shadow-emerald-500/20 transition">+ Add Daily Sale</button>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs sm:text-sm">
+            <thead>
+              <tr class="border-b border-slate-800 text-slate-400 text-[11px] uppercase">
+                <th class="py-3 px-2">Date</th>
+                <th class="py-3 px-2 text-right">Credit</th>
+                <th class="py-3 px-2 text-right">Cash</th>
+                <th class="py-3 px-2 text-right">Paid</th>
+                <th class="py-3 px-2 text-right">Cash Due</th>
+                <th class="py-3 px-2 text-right">Total</th>
+                <th class="py-3 px-2 text-right"></th>
+              </tr>
+            </thead>
+            <tbody id="monthlySalesBody" class="divide-y divide-slate-800/60"></tbody>
+            <tfoot id="monthlySalesFoot" class="border-t-2 border-slate-700 font-bold bg-slate-900/60"></tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- Loss & Profit Breakdown Side-by-Side -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <!-- Losses -->
+        <div class="glass-card rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-bold text-rose-400">Expense / Loss Breakdown</h3>
+            <button onclick="addLossItem()" class="text-xs font-semibold bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 px-2.5 py-1 rounded-lg transition">+ Add Loss</button>
+          </div>
+          <div id="lossList" class="space-y-2"></div>
+          <div class="mt-3 pt-3 border-t border-slate-800 flex justify-between text-sm font-extrabold">
+            <span class="text-slate-300">Total Loss</span>
+            <span id="totalLossVal" class="text-rose-400">৳0</span>
+          </div>
+        </div>
+
+        <!-- Profits -->
+        <div class="glass-card rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-bold text-emerald-400">Profit & Commission Sources</h3>
+            <button onclick="addProfitItem()" class="text-xs font-semibold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-lg transition">+ Add Profit</button>
+          </div>
+          <div id="profitList" class="space-y-2"></div>
+          <div class="mt-3 pt-3 border-t border-slate-800 flex justify-between text-sm font-extrabold">
+            <span class="text-slate-300">Total Profit</span>
+            <span id="totalProfitVal" class="text-emerald-400">৳0</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FLOATING ACTION BUTTON (FAB) FOR 1-TAP QUICK ENTRY -->
+  <button onclick="openQuickModal('collection')" class="fixed bottom-20 md:bottom-7 right-4 sm:right-7 z-40 flex items-center gap-2 bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-300 hover:to-teal-400 text-slate-950 font-extrabold text-xs sm:text-sm px-4 py-3.5 rounded-full shadow-2xl shadow-emerald-500/30 transition transform active:scale-95">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+    <span>Quick Entry</span>
+  </button>
+
+  <!-- MOBILE BOTTOM NAVIGATION BAR -->
+  <nav class="md:hidden fixed bottom-0 inset-x-0 z-40 glass border-t border-slate-800/90 px-2 py-1.5 flex justify-around items-center">
+    <button onclick="switchTab('dashboard')" data-tab="dashboard" class="mob-nav flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl text-emerald-400">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      <span class="text-[10px] font-bold">Home</span>
+    </button>
+    <button onclick="switchTab('invoices')" data-tab="invoices" class="mob-nav flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl text-slate-400">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+      <span class="text-[10px] font-semibold">Parties</span>
+    </button>
+    <button onclick="switchTab('honorarium')" data-tab="honorarium" class="mob-nav flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl text-slate-400">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+      <span class="text-[10px] font-semibold">Target</span>
+    </button>
+    <button onclick="switchTab('sales')" data-tab="sales" class="mob-nav flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl text-slate-400">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      <span class="text-[10px] font-semibold">Ledger</span>
+    </button>
+  </nav>
+
+  <!-- ==================== MODAL 1: ONE-TAP COLLECTION & PARTY LEDGER ==================== -->
+  <div id="partyModal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-slate-950/80 backdrop-blur-sm p-0 sm:p-4">
+    <div class="glass-card w-full max-w-xl rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 max-h-[92vh] overflow-y-auto border-t sm:border border-slate-700/80">
+      <div class="flex items-start justify-between gap-3 mb-4">
+        <div>
+          <span id="pmInvBadge" class="text-[11px] font-bold text-emerald-400 bg-emerald-500/15 px-2.5 py-0.5 rounded-full">Inv #1</span>
+          <h3 id="pmTitle" class="text-lg font-extrabold text-white mt-1">Pharmacy Name</h3>
+        </div>
+        <button onclick="closePartyModal()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300">✕</button>
+      </div>
+
+      <!-- Live Balance Pill Bar -->
+      <div class="grid grid-cols-3 gap-2.5 bg-slate-900/90 p-3 rounded-2xl border border-slate-800 mb-4 text-center">
+        <div>
+          <div class="text-[10px] uppercase text-slate-400">Invoice Bill</div>
+          <div id="pmBill" class="text-sm font-extrabold text-white">৳0</div>
+        </div>
+        <div>
+          <div class="text-[10px] uppercase text-slate-400">Collected</div>
+          <div id="pmCol" class="text-sm font-extrabold text-emerald-400">৳0</div>
+        </div>
+        <div>
+          <div class="text-[10px] uppercase text-slate-400">Remaining Due</div>
+          <div id="pmDue" class="text-sm font-extrabold text-rose-400">৳0</div>
+        </div>
+      </div>
+
+      <!-- One-Tap Quick Collect Box -->
+      <div class="bg-emerald-950/30 border border-emerald-500/25 rounded-2xl p-3.5 mb-4">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-emerald-300">⚡ Fast Collection Entry</span>
+          <div class="flex items-center gap-1.5">
+            <span class="text-[11px] text-slate-400">Day:</span>
+            <select id="pmQuickDay" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs font-bold text-white"></select>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-1.5">
+          <button onclick="quickAddDayAmount('full')" class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs transition">Pay Full Due</button>
+          <button onclick="quickAddDayAmount(500)" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-700 font-bold text-xs transition">+৳500</button>
+          <button onclick="quickAddDayAmount(1000)" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-700 font-bold text-xs transition">+৳1,000</button>
+          <button onclick="quickAddDayAmount(2000)" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-700 font-bold text-xs transition">+৳2,000</button>
+          <button onclick="quickAddDayAmount(5000)" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-700 font-bold text-xs transition">+৳5,000</button>
+        </div>
+      </div>
+
+      <!-- Edit Party Name & Invoice Amount -->
+      <div class="grid grid-cols-2 gap-2.5 mb-4">
+        <div>
+          <label class="block text-[11px] text-slate-400 mb-1">Party Name</label>
+          <input id="pmEditName" type="text" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white" />
+        </div>
+        <div>
+          <label class="block text-[11px] text-slate-400 mb-1">Invoice Sales (৳)</label>
+          <input id="pmEditSales" type="number" oninput="recalcPartyModalPreview()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-white" />
+        </div>
+      </div>
+
+      <!-- Visual 1-31 Calendar Grid -->
+      <div class="mb-4">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-slate-300">Day-by-Day Collection (1 – 31)</span>
+          <span class="text-[11px] text-emerald-400">Green = Paid</span>
+        </div>
+        <div id="pmDaysGrid" class="grid grid-cols-4 sm:grid-cols-6 gap-2"></div>
+      </div>
+
+      <div class="flex items-center justify-between pt-3 border-t border-slate-800">
+        <button onclick="deleteCurrentParty()" class="px-3.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 text-xs font-bold border border-rose-500/30">Delete Party</button>
+        <div class="flex gap-2">
+          <button onclick="closePartyModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold">Cancel</button>
+          <button onclick="savePartyModal()" class="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-extrabold shadow-lg shadow-emerald-500/20">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 2: FLOATING QUICK ENTRY MODAL ==================== -->
+  <div id="quickModal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-slate-950/80 backdrop-blur-sm p-0 sm:p-4">
+    <div class="glass-card w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 border-t sm:border border-slate-700/80">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-base font-extrabold text-white">⚡ Quick Entry</h3>
+        <button onclick="closeQuickModal()" class="p-1.5 rounded-xl bg-slate-800 text-slate-300">✕</button>
+      </div>
+
+      <!-- Mode Switcher -->
+      <div class="grid grid-cols-3 gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800 mb-4">
+        <button onclick="setQuickMode('collection')" data-qmode="collection" class="qmode-btn py-2 rounded-lg text-xs font-bold bg-emerald-500 text-slate-950">Collect Due</button>
+        <button onclick="setQuickMode('invoice')" data-qmode="invoice" class="qmode-btn py-2 rounded-lg text-xs font-bold text-slate-400">New Party</button>
+        <button onclick="setQuickMode('sale')" data-qmode="sale" class="qmode-btn py-2 rounded-lg text-xs font-bold text-slate-400">Daily Sale</button>
+      </div>
+
+      <!-- Mode A: Quick Collect -->
+      <div id="qform-collection" class="space-y-3">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Select Party</label>
+          <select id="qColParty" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-white"></select>
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Day of Month (1-31)</label>
+            <input id="qColDay" type="number" min="1" max="31" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" />
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Amount Collected (৳)</label>
+            <input id="qColAmt" type="number" placeholder="e.g. 1000" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-emerald-400" />
+          </div>
+        </div>
+        <button onclick="submitQuickCollection()" class="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-sm shadow-lg shadow-emerald-500/20">Save Collection</button>
+      </div>
+
+      <!-- Mode B: New Party Invoice -->
+      <div id="qform-invoice" class="hidden space-y-3">
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Inv #</label>
+            <input id="qInvNo" type="number" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" />
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs text-slate-400 mb-1">Pharmacy / Customer Name</label>
+            <input id="qInvName" type="text" placeholder="e.g. Life Pharma" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Sales Amount (৳)</label>
+            <input id="qInvSales" type="number" placeholder="0" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-white" />
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Paid Today (Optional)</label>
+            <input id="qInvPaid" type="number" placeholder="0" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-emerald-400" />
+          </div>
+        </div>
+        <button onclick="submitQuickInvoice()" class="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-sm shadow-lg shadow-emerald-500/20">+ Add Party Invoice</button>
+      </div>
+
+      <!-- Mode C: Daily Credit/Cash Sale -->
+      <div id="qform-sale" class="hidden space-y-3">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Date</label>
+          <input id="qSaleDate" type="date" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" />
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Credit (৳)</label>
+            <input id="qSaleCredit" type="number" placeholder="0" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2 text-sm text-white" />
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Cash (৳)</label>
+            <input id="qSaleCash" type="number" placeholder="0" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2 text-sm text-white" />
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Cash Paid (৳)</label>
+            <input id="qSalePaid" type="number" placeholder="0" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2 text-sm text-emerald-400" />
+          </div>
+        </div>
+        <button onclick="submitQuickSale()" class="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-sm shadow-lg shadow-emerald-500/20">+ Record Daily Sale</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 3: HONORARIUM DETAILS MODAL ==================== -->
+  <div id="honModal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-slate-950/80 backdrop-blur-sm p-0 sm:p-4">
+    <div class="glass-card w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 max-h-[88vh] overflow-y-auto border-t sm:border border-slate-700/80">
+      <div class="flex items-center justify-between mb-4">
+        <h3 id="honModalTitle" class="text-base font-extrabold text-white">Honorarium Sales</h3>
+        <button onclick="closeHonModal()" class="p-1.5 rounded-xl bg-slate-800 text-slate-300">✕</button>
+      </div>
+      <div class="grid grid-cols-2 gap-2.5 mb-4">
+        <div>
+          <label class="block text-[11px] text-slate-400 mb-1">Pharmacy Name</label>
+          <input id="hmName" type="text" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white" />
+        </div>
+        <div>
+          <label class="block text-[11px] text-slate-400 mb-1">Monthly Target (৳)</label>
+          <input id="hmTarget" type="number" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-emerald-400" />
+        </div>
+      </div>
+
+      <div id="hmEntriesList" class="space-y-2 max-h-56 overflow-y-auto mb-4"></div>
+
+      <div class="flex gap-2 mb-4">
+        <input id="hmNewDate" type="date" class="bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2 text-xs text-white" />
+        <input id="hmNewSales" type="number" placeholder="Sales (৳)" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white" />
+        <button onclick="addHonEntry()" class="px-3 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs">+ Add</button>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-3 border-t border-slate-800">
+        <button onclick="closeHonModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-xs font-semibold text-slate-300">Cancel</button>
+        <button onclick="saveHonModal()" class="px-5 py-2 rounded-xl bg-emerald-500 text-slate-950 text-xs font-extrabold">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 4: NEW MONTH MODAL ==================== -->
+  <div id="newMonthModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+    <div class="glass-card w-full max-w-sm rounded-3xl p-6 border border-slate-700/80 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-extrabold text-white">Create New Month</h3>
+        <button onclick="closeNewMonthModal()" class="p-1.5 rounded-xl bg-slate-800 text-slate-300">✕</button>
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">Month Name</label>
+        <input id="nmName" type="text" placeholder="e.g. December 2026" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white" />
+      </div>
+      <label class="flex items-center gap-2.5 text-xs text-slate-300 cursor-pointer">
+        <input id="nmCopyParties" type="checkbox" checked class="w-4 h-4 rounded accent-emerald-500" />
+        <span>Carry forward remaining party dues from <strong id="nmFromMonth" class="text-emerald-400"></strong></span>
+      </label>
+      <button onclick="createNewMonth()" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-sm">Create Month</button>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 5: BACKUP, EXPORT & RESTORE ==================== -->
+  <div id="settingsModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+    <div class="glass-card w-full max-w-sm rounded-3xl p-6 border border-slate-700/80 space-y-3">
+      <div class="flex items-center justify-between mb-1">
+        <h3 class="text-base font-extrabold text-white">Data Backup & Export</h3>
+        <button onclick="closeSettingsModal()" class="p-1.5 rounded-xl bg-slate-800 text-slate-300">✕</button>
+      </div>
+      <p class="text-xs text-slate-400">All changes auto-save in your device browser. Download a backup anytime.</p>
+      
+      <button onclick="exportCSV()" class="w-full py-2.5 px-4 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 font-bold text-xs flex items-center justify-between">
+        <span>Export Current Month to Excel (CSV)</span>
+        <span>↓ CSV</span>
+      </button>
+      
+      <button onclick="exportJSON()" class="w-full py-2.5 px-4 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/30 text-indigo-300 font-bold text-xs flex items-center justify-between">
+        <span>Download Full App Backup (JSON)</span>
+        <span>↓ JSON</span>
+      </button>
+
+      <label class="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold text-xs flex items-center justify-between cursor-pointer">
+        <span>Restore Backup from JSON File</span>
+        <span>↑ Upload</span>
+        <input type="file" accept=".json" onchange="importJSON(event)" class="hidden" />
+      </label>
+
+      <div class="pt-2 border-t border-slate-800">
+        <button onclick="resetToOriginal()" class="w-full py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-semibold">Reset to Original Excel Data</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 6: CLOUD SYNC & APK/PWA GUIDE ==================== -->
+  <div id="cloudModal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-slate-950/80 backdrop-blur-sm p-0 sm:p-4">
+    <div class="glass-card w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 max-h-[92vh] overflow-y-auto border-t sm:border border-slate-700/80 space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-base font-extrabold text-white">PC ↔ Phone Auto Sync & APK</h3>
+          <p class="text-[11px] text-slate-400">Real-time Firestore sync + installable Android App/APK guide</p>
+        </div>
+        <button onclick="closeCloudModal()" class="p-1.5 rounded-xl bg-slate-800 text-slate-300">✕</button>
+      </div>
+
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3.5 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-emerald-300">1. Sync Room Code (Same on PC & Phone)</span>
+          <span id="cloudModalStatus" class="text-[11px] font-bold text-amber-400">Local Only</span>
+        </div>
+        <input id="cloudRoomInput" type="text" placeholder="e.g. pharmasia-ruhitpur-zunaed" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-white" />
+      </div>
+
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3.5 space-y-2">
+        <label class="block text-xs font-bold text-indigo-300">2. Firebase Web Config JSON (Optional for Cloud Sync)</label>
+        <p class="text-[11px] text-slate-400">Paste your Firebase project config JSON here so PC and Phone sync automatically in real time. Leave empty to use Local Only mode.</p>
+        <textarea id="firebaseConfigInput" rows="5" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","appId":"..."}' class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-[11px] font-mono text-emerald-300 focus:outline-none focus:border-emerald-500"></textarea>
+        <div id="cloudErrorBox" class="hidden text-[11px] text-rose-400 bg-rose-500/10 border border-rose-500/30 rounded-xl p-2"></div>
+      </div>
+
+      <div class="bg-indigo-950/30 border border-indigo-500/25 rounded-2xl p-3.5 text-[11px] text-slate-300 space-y-1.5">
+        <div class="font-bold text-indigo-300">3. Android APK / App Install Tip</div>
+        <p>Host this HTML file on HTTPS (GitHub Pages / Netlify) and open in Chrome to tap <strong>Install App</strong>, or paste the hosted URL into <strong>PWA Builder</strong> to generate a standalone <code>.apk</code> package using the exact same Sync Room Code.</p>
+      </div>
+
+      <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-800">
+        <button onclick="disconnectCloudSync()" class="px-3.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 text-xs font-bold border border-rose-500/30">Use Local Only</button>
+        <div class="flex gap-2">
+          <button onclick="forcePushToCloud()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-emerald-300 border border-slate-700">Push Now</button>
+          <button onclick="connectCloudSync()" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-extrabold shadow-lg shadow-emerald-500/20">Save & Auto-Sync</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+const INITIAL_DATA = {"November 2026":{"target":209461,"invoices":[],"honorarium":[{"name":"Sohel Pharmacy","target":24000,"entries":[]},{"name":"Susanto Pharmacy","target":24000,"entries":[]},{"name":"Sumon med Hall 2","target":12000,"entries":[]},{"name":"Life Pharma","target":12000,"entries":[]}],"monthlySales":[],"losses":[{"name":"Shepon+Boss","amount":0},{"name":"Sohel+Sun","amount":0},{"name":"Sumon 2","amount":0},{"name":"Baishakhi+ Muzahid","amount":0},{"name":"Life+Bhai bahi","amount":0}],"profits":[{"name":"Sample","amount":0},{"name":"Others","amount":0}],"gavicoolBoxesSold":[0,0,0,0]},"October 2026":{"target":209461,"invoices":[{"invoice":1,"customer":"Bhai Bhai Ph","sales":3335,"daily":{}},{"invoice":2,"customer":"Life Pharma","sales":22845,"daily":{"1":3430,"8":845,"10":1000,"11":1000,"12":1000,"14":1000,"15":1000,"17":1000,"18":500,"19":570,"20":1000,"21":500,"23":500,"24":1000,"25":1000,"27":500,"28":500,"31":1000}},{"invoice":3,"customer":"PeerLes Ph","sales":5314,"daily":{"15":441,"21":360,"24":1000,"25":752,"27":540,"28":135,"29":690}},{"invoice":4,"customer":"Muzahid Ph","sales":6597,"daily":{}},{"invoice":5,"customer":"Maa Ph Join","sales":1468,"daily":{"30":300}},{"invoice":6,"customer":"Alhumdulillah Ph","sales":5617,"daily":{"26":1000,"27":1000,"28":617,"29":1000,"30":500,"31":500}},{"invoice":7,"customer":"Boss Ruhit","sales":19132,"daily":{}},{"invoice":8,"customer":"Susanto Ph","sales":288,"daily":{}},{"invoice":9,"customer":"Shepon Ahmed","sales":2904,"daily":{}},{"invoice":10,"customer":"Shepon Ahmed","sales":31681,"daily":{}},{"invoice":11,"customer":"Manager","sales":20021,"daily":{}},{"invoice":12,"customer":"Sumon Med 1","sales":3839,"daily":{"15":190,"17":175,"18":430,"24":105,"25":522,"30":345}},{"invoice":13,"customer":"Sumon Med 2","sales":10567,"daily":{"14":500,"15":224,"16":500,"17":400,"18":500,"19":300,"20":500,"23":300,"24":400,"25":400,"26":400,"27":300,"28":500,"29":343,"30":500,"31":300}},{"invoice":14,"customer":"Ruhitpur Med","sales":5096,"daily":{"29":1500,"31":1000}},{"invoice":15,"customer":"Setu Ph","sales":800,"daily":{"24":400}},{"invoice":18,"customer":"Owaziha","sales":630,"daily":{}},{"invoice":20,"customer":"Boss","sales":2000,"daily":{}},{"invoice":21,"customer":"Nazmul","sales":500,"daily":{}},{"invoice":22,"customer":"DCC","sales":14570,"daily":{"1":2468,"2":480,"3":7800}},{"invoice":27,"customer":"Bank","sales":25000,"daily":{}},{"invoice":28,"customer":"Home","sales":5000,"daily":{}},{"invoice":29,"customer":"Cash","sales":0,"daily":{}}],"honorarium":[{"name":"Sohel Pharmacy","target":24000,"entries":[{"date":"2026-10-03","sales":37984},{"date":"2026-10-05","sales":4699}]},{"name":"Susanto Pharmacy","target":24000,"entries":[{"date":"2026-10-03","sales":34771},{"date":"2026-10-10","sales":1298},{"date":"2026-10-24","sales":792},{"date":"2026-10-26","sales":3575},{"date":"2026-10-28","sales":264},{"date":"2026-10-31","sales":1068}]},{"name":"Sumon med Hall 2","target":12000,"entries":[{"date":"2026-10-03","sales":9011},{"date":"2026-10-05","sales":1109},{"date":"2026-10-10","sales":13420},{"date":"2026-10-17","sales":5984},{"date":"2026-10-19","sales":264},{"date":"2026-10-21","sales":264},{"date":"2026-10-26","sales":264}]},{"name":"Life Pharma","target":12000,"entries":[{"date":"2026-10-03","sales":24322},{"date":"2026-10-05","sales":2904},{"date":"2026-10-07","sales":4290},{"date":"2026-10-10","sales":493}]}],"monthlySales":[{"date":"2026-10-03","credit":109448,"cash":13971,"paid":13971},{"date":"2026-10-05","credit":3749,"cash":4963,"paid":4963},{"date":"2026-10-07","credit":6607,"cash":0,"paid":0},{"date":"2026-10-10","credit":15968,"cash":493,"paid":493},{"date":"2026-10-12","credit":0,"cash":1535,"paid":1535},{"date":"2026-10-14","credit":600,"cash":1054,"paid":1054},{"date":"2026-10-17","credit":0,"cash":5984,"paid":5984},{"date":"2026-10-19","credit":0,"cash":13644,"paid":13644},{"date":"2026-10-21","credit":0,"cash":937,"paid":937},{"date":"2026-10-24","credit":0,"cash":3136,"paid":3136},{"date":"2026-10-26","credit":19132,"cash":3839,"paid":3375},{"date":"2026-10-28","credit":0,"cash":3083,"paid":83},{"date":"2026-10-31","credit":0,"cash":2127,"paid":0}],"losses":[{"name":"Shepon+Boss","amount":5460},{"name":"Sohel+Sun","amount":410},{"name":"Sumon 2","amount":1000},{"name":"Baishakhi","amount":1800},{"name":"Life+Bhai bahi","amount":4000}],"profits":[{"name":"Sample","amount":0},{"name":"Others","amount":0}],"gavicoolBoxesSold":[14,12,10,10]},"September 2026":{"target":209461,"invoices":[{"invoice":1,"customer":"Life Pharma","sales":1500,"daily":{}},{"invoice":2,"customer":"Owaziha Ph","sales":200,"daily":{}},{"invoice":3,"customer":"Peerless Ph","sales":500,"daily":{}},{"invoice":4,"customer":"Baishakhi Ph","sales":2366,"daily":{}},{"invoice":5,"customer":"Sumon Med 1","sales":500,"daily":{}},{"invoice":6,"customer":"Maa Join","sales":2047,"daily":{"3":340}},{"invoice":7,"customer":"DCC","sales":13600,"daily":{}},{"invoice":8,"customer":"Sumon Med 2","sales":3483,"daily":{}},{"invoice":22,"customer":"BOss Ruhit","sales":23790,"daily":{}},{"invoice":23,"customer":"Boss DCC","sales":20097,"daily":{"1":4950}},{"invoice":25,"customer":"Advance/Adj","sales":0,"daily":{"1":3772}}],"honorarium":[{"name":"Sohel Pharmacy","target":24000,"entries":[{"date":"2026-09-02","sales":34674},{"date":"2026-09-09","sales":2477},{"date":"2026-09-16","sales":7603}]},{"name":"Susanto Pharmacy","target":24000,"entries":[{"date":"2026-09-02","sales":28419},{"date":"2026-09-05","sales":1888},{"date":"2026-09-16","sales":7603}]},{"name":"Sumon med Hall 2","target":12000,"entries":[{"date":"2026-09-02","sales":16332},{"date":"2026-09-05","sales":2433},{"date":"2026-09-09","sales":2904},{"date":"2026-09-14","sales":1338},{"date":"2026-09-16","sales":10481},{"date":"2026-09-23","sales":633}]},{"name":"Life Pharma","target":12000,"entries":[{"date":"2026-09-02","sales":21473},{"date":"2026-09-16","sales":7603}]}],"monthlySales":[{"date":"2026-09-02","credit":101674,"cash":14504,"paid":14504},{"date":"2026-09-05","credit":2949,"cash":2954,"paid":2954},{"date":"2026-09-07","credit":0,"cash":634,"paid":634},{"date":"2026-09-09","credit":17525,"cash":0,"paid":0},{"date":"2026-09-14","credit":11424,"cash":3301,"paid":3301},{"date":"2026-09-16","credit":0,"cash":34702,"paid":34702},{"date":"2026-09-19","credit":0,"cash":9846,"paid":9846},{"date":"2026-09-21","credit":0,"cash":1372,"paid":1372},{"date":"2026-09-23","credit":0,"cash":2383,"paid":2383},{"date":"2026-09-26","credit":1360,"cash":0,"paid":0},{"date":"2026-09-28","credit":0,"cash":2302,"paid":2302},{"date":"2026-09-30","credit":0,"cash":2906,"paid":2906}],"losses":[{"name":"Shepon+Boss","amount":8720},{"name":"Sohel+Sun","amount":0},{"name":"Sumon 2","amount":1000},{"name":"Baishakhi","amount":400},{"name":"Life+Bhai bahi","amount":0}],"profits":[{"name":"Sample","amount":0},{"name":"Others","amount":0}],"gavicoolBoxesSold":[0,0,0,0]},"ODER September 2026":{"target":201970,"invoices":[{"invoice":1,"customer":"Setu Ph","sales":3000,"daily":{}},{"invoice":2,"customer":"DP PH","sales":1500,"daily":{"1":1000}},{"invoice":3,"customer":"Baishakhi Ph","sales":18000,"daily":{"1":10000}},{"invoice":4,"customer":"Maa ph","sales":2000,"daily":{"1":1200}},{"invoice":5,"customer":"All Care","sales":2000,"daily":{}},{"invoice":6,"customer":"Jobayer Ph","sales":2000,"daily":{}},{"invoice":7,"customer":"Alhumdulillah","sales":4000,"daily":{}},{"invoice":8,"customer":"Arpon Ph","sales":4500,"daily":{}},{"invoice":9,"customer":"Apon P","sales":3000,"daily":{"1":2500}},{"invoice":10,"customer":"Sun Ph","sales":5000,"daily":{"1":4000}},{"invoice":11,"customer":"Maaa Ph","sales":5000,"daily":{}},{"invoice":12,"customer":"Modina","sales":2000,"daily":{}},{"invoice":13,"customer":"Owaziha Ph and city","sales":3600,"daily":{}},{"invoice":14,"customer":"Sohel Ph","sales":6000,"daily":{}},{"invoice":15,"customer":"Nur Ph","sales":5000,"daily":{"1":2000}},{"invoice":16,"customer":"Sumon Med 1","sales":3000,"daily":{"1":1800}},{"invoice":17,"customer":"Sumon Med 2","sales":12000,"daily":{"1":12000}},{"invoice":18,"customer":"Ruhitpur Med","sales":5000,"daily":{"1":5000}},{"invoice":19,"customer":"Eva Ph","sales":3000,"daily":{}},{"invoice":20,"customer":"Bhai bhai","sales":4000,"daily":{"1":3000}},{"invoice":21,"customer":"Life Ph","sales":20000,"daily":{"1":20000}},{"invoice":22,"customer":"Peerless","sales":4000,"daily":{}},{"invoice":23,"customer":"Maa join","sales":4000,"daily":{}},{"invoice":24,"customer":"Muzahid","sales":5000,"daily":{"1":2300}},{"invoice":25,"customer":"Ehsan Ph","sales":5000,"daily":{}},{"invoice":26,"customer":"Maa Boding","sales":3000,"daily":{}},{"invoice":27,"customer":"Dhaka Ph","sales":2000,"daily":{}},{"invoice":28,"customer":"Shakta ph","sales":3000,"daily":{}},{"invoice":29,"customer":"Zamil Ph","sales":2000,"daily":{}},{"invoice":30,"customer":"Faisal Med","sales":20000,"daily":{"1":12000}}],"honorarium":[{"name":"Sohel Pharmacy","target":24000,"entries":[]},{"name":"Susanto Pharmacy","target":24000,"entries":[]},{"name":"Sumon med Hall 2","target":12000,"entries":[]},{"name":"Life Pharma","target":12000,"entries":[]}],"monthlySales":[{"date":"2026-09-21","credit":161600,"cash":0,"paid":0}],"losses":[],"profits":[{"name":"Sample","amount":0},{"name":"Others","amount":0}],"gavicoolBoxesSold":[0,0,0,0]},"August 2026":{"target":201970,"invoices":[],"honorarium":[{"name":"Sohel Pharmacy","target":24000,"entries":[{"date":"2026-08-05","sales":24426},{"date":"2026-08-08","sales":792},{"date":"2026-08-12","sales":2945}]},{"name":"Susanto Pharmacy","target":24000,"entries":[{"date":"2026-08-05","sales":34324},{"date":"2026-08-10","sales":1320},{"date":"2026-08-12","sales":2904}]},{"name":"Sumon med Hall 2","target":12000,"entries":[{"date":"2026-08-05","sales":10222},{"date":"2026-08-08","sales":5280},{"date":"2026-08-12","sales":1144},{"date":"2026-08-17","sales":3789},{"date":"2026-08-29","sales":634}]},{"name":"Life Pharma","target":12000,"entries":[{"date":"2026-08-05","sales":8295},{"date":"2026-08-12","sales":13281}]}],"monthlySales":[{"date":"2026-08-03","credit":0,"cash":8363,"paid":8363},{"date":"2026-08-05","credit":77899,"cash":0,"paid":0},{"date":"2026-08-08","credit":10565,"cash":0,"paid":0},{"date":"2026-08-10","credit":5419,"cash":0,"paid":0},{"date":"2026-08-12","credit":7894,"cash":13281,"paid":13281},{"date":"2026-08-15","credit":0,"cash":3214,"paid":3214},{"date":"2026-08-17","credit":0,"cash":4229,"paid":4229},{"date":"2026-08-19","credit":0,"cash":6489,"paid":6489},{"date":"2026-08-22","credit":634,"cash":1189,"paid":1189},{"date":"2026-08-24","credit":1935,"cash":0,"paid":0},{"date":"2026-08-26","credit":0,"cash":2003,"paid":2003},{"date":"2026-08-29","credit":634,"cash":4500,"paid":4500},{"date":"2026-08-31","credit":0,"cash":3400,"paid":0}],"losses":[{"name":"Shepon+Boss","amount":3500},{"name":"Sohel+Sun","amount":480},{"name":"Sumon 2","amount":1000},{"name":"Baishakhi","amount":1330},{"name":"Life+Bhai bahi","amount":2937}],"profits":[{"name":"Sample","amount":0},{"name":"Others","amount":0}],"gavicoolBoxesSold":[0,0,0,0]},"July 2026":{"target":209461,"invoices":[],"honorarium":[{"name":"Sohel Pharmacy","target":24000,"entries":[{"date":"2026-07-01","sales":25292}]},{"name":"Susanto Pharmacy","target":24000,"entries":[{"date":"2026-07-01","sales":11903},{"date":"2026-07-04","sales":8008},{"date":"2026-07-11","sales":1540},{"date":"2026-07-13","sales":3168},{"date":"2026-07-15","sales":1971},{"date":"2026-07-25","sales":3855}]},{"name":"Sumon med Hall 2","target":12000,"entries":[{"date":"2026-07-01","sales":2359},{"date":"2026-07-04","sales":9677},{"date":"2026-07-11","sales":4541}]},{"name":"Life Pharma","target":12000,"entries":[{"date":"2026-07-01","sales":598},{"date":"2026-07-11","sales":22606},{"date":"2026-07-15","sales":4450}]}],"monthlySales":[{"date":"2026-07-01","credit":40564,"cash":0,"paid":0},{"date":"2026-07-04","credit":20048,"cash":7225,"paid":7225},{"date":"2026-07-06","credit":524,"cash":214,"paid":214},{"date":"2026-07-08","credit":0,"cash":2384,"paid":2384},{"date":"2026-07-11","credit":30467,"cash":0,"paid":0},{"date":"2026-07-13","credit":4154,"cash":0,"paid":0},{"date":"2026-07-15","credit":5061,"cash":7156,"paid":7156},{"date":"2026-07-18","credit":0,"cash":3428,"paid":3428},{"date":"2026-07-20","credit":0,"cash":600,"paid":600},{"date":"2026-07-22","credit":3260,"cash":600,"paid":600},{"date":"2026-07-25","credit":1540,"cash":3855,"paid":3855},{"date":"2026-07-27","credit":0,"cash":4206,"paid":4206},{"date":"2026-07-29","credit":0,"cash":880,"paid":880}],"losses":[{"name":"Shepon+Boss","amount":4783},{"name":"Sohel+Sun","amount":801},{"name":"Sumon 2","amount":1000},{"name":"Baishakhi","amount":840},{"name":"Muzahid+Life","amount":1061}],"profits":[{"name":"Sample","amount":0},{"name":"Others","amount":0}],"gavicoolBoxesSold":[0,0,0,0]}};
+
+const STORAGE_KEY = 'pharmasia_premium_v2';
+const CLOUD_SETTINGS_KEY = 'pharmasia_cloud_settings_v1';
+let appData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || JSON.parse(JSON.stringify(INITIAL_DATA));
+let currentMonth = appData["October 2026"] ? "October 2026" : Object.keys(appData)[0];
+let invFilter = 'all';
+let editingPartyIdx = null;
+let editingHonIdx = null;
+
+// PWA & Cloud Sync State
+let deferredInstallPrompt = null;
+let cloudSettings = JSON.parse(localStorage.getItem(CLOUD_SETTINGS_KEY)) || {
+  roomCode: 'pharmasia-ruhitpur-main',
+  firebaseConfigText: ''
+};
+let cloudState = {
+  mode: 'Local Only', // 'Synced' | 'Syncing' | 'Offline' | 'Local Only'
+  db: null,
+  docRef: null,
+  unsubscribe: null,
+  isApplyingRemote: false,
+  pushTimer: null
+};
+
+function setupPwaSupport() {
+  try {
+    const manifestObj = {
+      name: 'Pharmasia Hisab',
+      short_name: 'Pharmasia',
+      description: 'Territory sales, party dues, honorarium & Gavicool tracker',
+      start_url: './',
+      display: 'standalone',
+      background_color: '#090d16',
+      theme_color: '#10b981',
+      orientation: 'portrait-primary',
+      icons: [
+        {
+          src: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="42" fill="%2310b981"/><text x="96" y="128" font-size="104" font-family="Arial,sans-serif" font-weight="900" text-anchor="middle" fill="%23090d16">P</text></svg>',
+          sizes: '192x192',
+          type: 'image/svg+xml',
+          purpose: 'any'
+        }
+      ]
+    };
+    const manifestBlob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
+    const manifestUrl = URL.createObjectURL(manifestBlob);
+    const linkEl = document.getElementById('dynamicManifestLink');
+    if (linkEl) linkEl.href = manifestUrl;
+
+    if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+      const swCode = `
+        const CACHE_NAME = 'pharmasia-hisab-v1';
+        self.addEventListener('install', (event) => {
+          self.skipWaiting();
+          event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(['./'])));
+        });
+        self.addEventListener('activate', (event) => {
+          event.waitUntil(self.clients.claim());
+        });
+        self.addEventListener('fetch', (event) => {
+          if (event.request.method !== 'GET') return;
+          event.respondWith(
+            fetch(event.request).catch(() => caches.match(event.request))
+          );
+        });
+      `;
+      const swBlob = new Blob([swCode], { type: 'application/javascript' });
+      const swUrl = URL.createObjectURL(swBlob);
+      navigator.serviceWorker.register(swUrl).catch(() => {});
+    }
+  } catch (err) {
+    console.warn('PWA setup fallback:', err);
+  }
+}
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  const btn = document.getElementById('installAppBtn');
+  if (btn) {
+    btn.classList.remove('hidden');
+    btn.classList.add('inline-flex');
+  }
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  const btn = document.getElementById('installAppBtn');
+  if (btn) {
+    btn.classList.add('hidden');
+    btn.classList.remove('inline-flex');
+  }
+  showToast('Pharmasia Hisab installed!');
+});
+
+async function triggerInstallApp() {
+  if (!deferredInstallPrompt) {
+    openCloudModal();
+    return;
+  }
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+}
+
+window.addEventListener('online', () => {
+  if (cloudState.docRef) {
+    setSyncBadge('Syncing', 'Reconnecting...');
+    pushAppDataToCloud(true);
+  } else {
+    setSyncBadge('Local Only', 'Online');
+  }
+});
+
+window.addEventListener('offline', () => {
+  if (cloudState.docRef) {
+    setSyncBadge('Offline', 'Saved locally (Offline)');
+  }
+});
+
+function setSyncBadge(status, labelOverride) {
+  cloudState.mode = status;
+  const dot = document.getElementById('syncStatusDot');
+  const txt = document.getElementById('syncStatusText');
+  const modalStatus = document.getElementById('cloudModalStatus');
+  if (!dot || !txt) return;
+
+  dot.className = 'w-2 h-2 rounded-full ';
+  if (status === 'Synced') {
+    dot.className += 'bg-emerald-400';
+    txt.textContent = labelOverride || 'Synced';
+  } else if (status === 'Syncing') {
+    dot.className += 'bg-sky-400 animate-pulse';
+    txt.textContent = labelOverride || 'Syncing...';
+  } else if (status === 'Offline') {
+    dot.className += 'bg-rose-400';
+    txt.textContent = labelOverride || 'Offline';
+  } else {
+    dot.className += 'bg-amber-400';
+    txt.textContent = labelOverride || 'Local Only';
+  }
+
+  if (modalStatus) {
+    modalStatus.textContent = txt.textContent;
+  }
+}
+
+function parseFirebaseConfigJson(rawText) {
+  const cleaned = (rawText || '').trim();
+  if (!cleaned) return null;
+  // Support pasting "const firebaseConfig = {...};" or pure JSON
+  const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+  const candidate = jsonMatch ? jsonMatch[0] : cleaned;
+  // Convert JS object keys if unquoted
+  const normalized = candidate
+    .replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":')
+    .replace(/'/g, '"')
+    .replace(/,\s*}/g, '}');
+  const parsed = JSON.parse(normalized);
+  if (!parsed.apiKey || !parsed.projectId) {
+    throw new Error('Firebase config must include apiKey and projectId.');
+  }
+  return parsed;
+}
+
+async function initCloudSyncIfConfigured() {
+  if (cloudState.unsubscribe) {
+    cloudState.unsubscribe();
+    cloudState.unsubscribe = null;
+  }
+  cloudState.db = null;
+  cloudState.docRef = null;
+
+  const fb = window.__PHARMASIA_FIREBASE__;
+  if (!fb) return;
+
+  let configObj = null;
+  try {
+    configObj = parseFirebaseConfigJson(cloudSettings.firebaseConfigText);
+  } catch (e) {
+    setSyncBadge('Local Only', 'Config Error');
+    return;
+  }
+
+  if (!configObj) {
+    setSyncBadge('Local Only', navigator.onLine ? 'Local Only' : 'Offline');
+    return;
+  }
+
+  if (!navigator.onLine) {
+    setSyncBadge('Offline', 'Offline');
+    return;
+  }
+
+  try {
+    setSyncBadge('Syncing', 'Connecting...');
+    const appName = 'pharmasia_sync_' + (configObj.projectId || 'default');
+    const existingApp = fb.getApps().find(a => a.name === appName);
+    const firebaseApp = existingApp || fb.initializeApp(configObj, appName);
+    const auth = fb.getAuth(firebaseApp);
+    await fb.signInAnonymously(auth);
+
+    const db = fb.getFirestore(firebaseApp);
+    const safeRoom = (cloudSettings.roomCode || 'pharmasia-ruhitpur-main')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9-_]/g, '_') || 'pharmasia_ruhitpur_main';
+
+    const docRef = fb.doc(db, 'pharmasia_rooms', safeRoom);
+    cloudState.db = db;
+    cloudState.docRef = docRef;
+
+    cloudState.unsubscribe = fb.onSnapshot(
+      docRef,
+      (snap) => {
+        if (snap.exists()) {
+          const remotePayload = snap.data();
+          if (remotePayload && remotePayload.months && typeof remotePayload.months === 'object') {
+            const remoteStr = JSON.stringify(remotePayload.months);
+            const localStr = JSON.stringify(appData);
+            if (remoteStr !== localStr) {
+              cloudState.isApplyingRemote = true;
+              appData = remotePayload.months;
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+              if (!appData[currentMonth]) {
+                currentMonth = Object.keys(appData)[0];
+              }
+              initMonthDropdown();
+              renderAll();
+              cloudState.isApplyingRemote = false;
+              showToast('Synced from cloud');
+            }
+          }
+        } else {
+          // Initialize remote room with current local data
+          pushAppDataToCloud(true);
+        }
+        setSyncBadge('Synced', 'Synced');
+      },
+      (err) => {
+        console.warn('Firestore listener error:', err);
+        setSyncBadge('Offline', 'Sync Error');
+      }
+    );
+  } catch (err) {
+    console.warn('Cloud sync init failed:', err);
+    setSyncBadge('Offline', 'Sync Error');
+  }
+}
+
+async function pushAppDataToCloud(immediate = false) {
+  if (!cloudState.docRef || cloudState.isApplyingRemote) return;
+  if (!navigator.onLine) {
+    setSyncBadge('Offline', 'Offline');
+    return;
+  }
+
+  const executePush = async () => {
+    try {
+      setSyncBadge('Syncing', 'Syncing...');
+      const fb = window.__PHARMASIA_FIREBASE__;
+      await fb.setDoc(cloudState.docRef, {
+        months: appData,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+      setSyncBadge('Synced', 'Synced');
+    } catch (err) {
+      console.warn('Push failed:', err);
+      setSyncBadge('Offline', 'Sync Error');
+    }
+  };
+
+  if (immediate) {
+    await executePush();
+  } else {
+    clearTimeout(cloudState.pushTimer);
+    cloudState.pushTimer = setTimeout(executePush, 500);
+  }
+}
+
+function openCloudModal() {
+  document.getElementById('cloudRoomInput').value = cloudSettings.roomCode || 'pharmasia-ruhitpur-main';
+  document.getElementById('firebaseConfigInput').value = cloudSettings.firebaseConfigText || '';
+  document.getElementById('cloudErrorBox').classList.add('hidden');
+  const modal = document.getElementById('cloudModal');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function closeCloudModal() {
+  const modal = document.getElementById('cloudModal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+
+async function connectCloudSync() {
+  const roomVal = document.getElementById('cloudRoomInput').value.trim() || 'pharmasia-ruhitpur-main';
+  const cfgText = document.getElementById('firebaseConfigInput').value.trim();
+  const errBox = document.getElementById('cloudErrorBox');
+
+  try {
+    parseFirebaseConfigJson(cfgText);
+    errBox.classList.add('hidden');
+  } catch (e) {
+    errBox.textContent = e.message || 'Invalid Firebase JSON format.';
+    errBox.classList.remove('hidden');
+    return;
+  }
+
+  cloudSettings = { roomCode: roomVal, firebaseConfigText: cfgText };
+  localStorage.setItem(CLOUD_SETTINGS_KEY, JSON.stringify(cloudSettings));
+  closeCloudModal();
+  await initCloudSyncIfConfigured();
+  if (cloudState.docRef) {
+    await pushAppDataToCloud(true);
+  }
+  showToast('Cloud sync settings saved');
+}
+
+async function forcePushToCloud() {
+  await pushAppDataToCloud(true);
+  showToast('Pushed latest data to cloud');
+}
+
+function disconnectCloudSync() {
+  cloudSettings = { roomCode: 'pharmasia-ruhitpur-main', firebaseConfigText: '' };
+  localStorage.setItem(CLOUD_SETTINGS_KEY, JSON.stringify(cloudSettings));
+  if (cloudState.unsubscribe) {
+    cloudState.unsubscribe();
+    cloudState.unsubscribe = null;
+  }
+  cloudState.db = null;
+  cloudState.docRef = null;
+  setSyncBadge('Local Only', 'Local Only');
+  closeCloudModal();
+  showToast('Switched to Local Only mode');
+}
+
+function fmt(n) {
+  return '৳' + Math.round(Number(n) || 0).toLocaleString('en-IN');
+}
+
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  el.classList.remove('translate-x-full', 'opacity-0');
+  setTimeout(() => el.classList.add('translate-x-full', 'opacity-0'), 2200);
+}
+
+function saveData(msg = 'Saved automatically') {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+    renderAll();
+    if (msg) showToast(msg);
+    if (cloudState.docRef && !cloudState.isApplyingRemote) {
+      pushAppDataToCloud(false);
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function initMonthDropdown() {
+  const sel = document.getElementById('monthSelect');
+  sel.innerHTML = Object.keys(appData)
+    .map(m => `<option value="${m}" ${m === currentMonth ? 'selected' : ''}>${m}</option>`)
+    .join('');
+}
+
+function switchMonth(m) {
+  currentMonth = m;
+  renderAll();
+  showToast(`Switched to ${m}`);
+}
+
+function switchTab(tabId) {
+  ['dashboard', 'invoices', 'honorarium', 'sales'].forEach(id => {
+    document.getElementById('view-' + id).classList.toggle('hidden', id !== tabId);
+  });
+
+  // Update desktop pills
+  document.querySelectorAll('.nav-pill').forEach(btn => {
+    const active = btn.dataset.tab === tabId;
+    btn.className = active
+      ? 'nav-pill px-4 py-2 rounded-lg text-xs font-semibold transition-all bg-emerald-500 text-slate-950 shadow'
+      : 'nav-pill px-4 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all';
+  });
+
+  // Update mobile bottom nav
+  document.querySelectorAll('.mob-nav').forEach(btn => {
+    const active = btn.dataset.tab === tabId;
+    btn.className = active
+      ? 'mob-nav flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl text-emerald-400'
+      : 'mob-nav flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl text-slate-400';
+  });
+}
+
+function computeMetrics(mData) {
+  let invSales = 0, invCollected = 0, invDues = 0;
+  (mData.invoices || []).forEach(inv => {
+    const col = Object.values(inv.daily || {}).reduce((a, b) => a + (Number(b) || 0), 0);
+    const sales = Number(inv.sales) || 0;
+    invSales += sales;
+    invCollected += col;
+    invDues += (sales - col);
+  });
+
+  let creditSales = 0, cashSales = 0, cashPaid = 0, cashDues = 0;
+  (mData.monthlySales || []).forEach(s => {
+    creditSales += Number(s.credit) || 0;
+    cashSales += Number(s.cash) || 0;
+    cashPaid += Number(s.paid) || 0;
+    cashDues += (Number(s.cash) || 0) - (Number(s.paid) || 0);
+  });
+
+  const totalMonthlySales = creditSales + cashSales;
+  const target = Number(mData.target) || 0;
+  const achievement = target > 0 ? (totalMonthlySales / target) * 100 : 0;
+  const remainingTarget = Math.max(0, target - totalMonthlySales);
+
+  // Closing formula: Collection Dues - Credit Dues - Cash Dues
+  const myAmount = invDues - creditSales - cashDues;
+
+  const honTotal = (mData.honorarium || []).reduce(
+    (sum, h) => sum + (h.entries || []).reduce((s, e) => s + (Number(e.sales) || 0), 0),
+    0
+  );
+  const products10Pct = honTotal * 0.10;
+  const extraProfits = (mData.profits || []).reduce((s, p) => s + (Number(p.amount) || 0), 0);
+  const totalProfit = products10Pct + extraProfits;
+  const totalLoss = (mData.losses || []).reduce((s, l) => s + (Number(l.amount) || 0), 0);
+  const netProfit = totalProfit - totalLoss;
+
+  return {
+    invSales, invCollected, invDues,
+    creditSales, cashSales, cashPaid, cashDues, totalMonthlySales,
+    target, achievement, remainingTarget, myAmount,
+    honTotal, products10Pct, totalProfit, totalLoss, netProfit
+  };
+}
+
+// ==================== RENDER DASHBOARD ====================
+function renderDashboard() {
+  const mData = appData[currentMonth];
+  const m = computeMetrics(mData);
+
+  document.getElementById('heroSalesVal').textContent = fmt(m.totalMonthlySales);
+  document.getElementById('targetInput').value = m.target;
+  document.getElementById('heroPctBadge').textContent = m.achievement.toFixed(1) + '%';
+  document.getElementById('heroRemainingText').textContent = m.remainingTarget > 0
+    ? `Need ${fmt(m.remainingTarget)} more`
+    : '🎉 Target Achieved!';
+  document.getElementById('heroProgressBar').style.width = Math.min(100, m.achievement) + '%';
+
+  // 4 KPI Cards
+  document.getElementById('kpiGrid').innerHTML = `
+    <div class="glass-card rounded-2xl p-4">
+      <div class="text-[11px] font-semibold text-slate-400">Credit vs Cash Sales</div>
+      <div class="text-lg sm:text-xl font-extrabold text-white mt-1">${fmt(m.creditSales)}</div>
+      <div class="text-[11px] text-indigo-400 mt-1 font-medium">Cash Sales: ${fmt(m.cashSales)}</div>
+    </div>
+    <div class="glass-card rounded-2xl p-4">
+      <div class="text-[11px] font-semibold text-slate-400">Party Collected</div>
+      <div class="text-lg sm:text-xl font-extrabold text-emerald-400 mt-1">${fmt(m.invCollected)}</div>
+      <div class="text-[11px] text-slate-400 mt-1">Out of ${fmt(m.invSales)} billed</div>
+    </div>
+    <div class="glass-card rounded-2xl p-4">
+      <div class="text-[11px] font-semibold text-slate-400">Outstanding Dues</div>
+      <div class="text-lg sm:text-xl font-extrabold text-rose-400 mt-1">${fmt(m.invDues)}</div>
+      <div class="text-[11px] text-slate-400 mt-1">Active market balance</div>
+    </div>
+    <div class="glass-card rounded-2xl p-4">
+      <div class="text-[11px] font-semibold text-slate-400">Net Profit / Loss</div>
+      <div class="text-lg sm:text-xl font-extrabold ${m.netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'} mt-1">${m.netProfit >= 0 ? '+' : ''}${fmt(m.netProfit)}</div>
+      <div class="text-[11px] text-slate-400 mt-1">Profit ${fmt(m.totalProfit)} · Loss ${fmt(m.totalLoss)}</div>
+    </div>
+  `;
+
+  // Closing Breakdown
+  document.getElementById('closingBreakdown').innerHTML = `
+    <div class="flex justify-between items-center bg-slate-900/80 px-3.5 py-2.5 rounded-xl text-xs">
+      <span class="text-slate-300">Collection Dues (Party Ledger)</span>
+      <span class="font-bold text-white">${fmt(m.invDues)}</span>
+    </div>
+    <div class="flex justify-between items-center bg-slate-900/80 px-3.5 py-2.5 rounded-xl text-xs">
+      <span class="text-slate-300">Less: Credit Dues</span>
+      <span class="font-bold text-amber-300">− ${fmt(m.creditSales)}</span>
+    </div>
+    <div class="flex justify-between items-center bg-slate-900/80 px-3.5 py-2.5 rounded-xl text-xs">
+      <span class="text-slate-300">Less: Unpaid Cash Dues</span>
+      <span class="font-bold text-amber-300">− ${fmt(m.cashDues)}</span>
+    </div>
+    <div class="flex justify-between items-center bg-emerald-500/10 border border-emerald-500/30 px-3.5 py-3 rounded-xl text-xs sm:text-sm">
+      <span class="font-bold text-emerald-300">My Amount (Net Balance)</span>
+      <span class="font-extrabold ${m.myAmount >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${fmt(m.myAmount)}</span>
+    </div>
+  `;
+
+  // Visual SVG Progress Bars for Honorarium Pharmacies
+  const honItems = (mData.honorarium || []).map(h => {
+    const sales = (h.entries || []).reduce((s, e) => s + (Number(e.sales) || 0), 0);
+    const pct = h.target > 0 ? Math.min(100, (sales / h.target) * 100) : 0;
+    return { name: h.name, target: h.target, sales, pct };
+  });
+
+  document.getElementById('svgChartContainer').innerHTML = `
+    <div class="space-y-3.5">
+      ${honItems.map(item => `
+        <div>
+          <div class="flex justify-between text-xs mb-1">
+            <span class="font-semibold text-slate-200">${item.name}</span>
+            <span class="text-slate-400"><strong class="text-white">${fmt(item.sales)}</strong> / ${fmt(item.target)} (${item.pct.toFixed(0)}%)</span>
+          </div>
+          <svg class="w-full h-3 rounded-full overflow-hidden" viewBox="0 0 100 6" preserveAspectRatio="none">
+            <rect x="0" y="0" width="100" height="6" fill="#1e293b" rx="3" />
+            <rect x="0" y="0" width="${item.pct}" height="6" fill="${item.pct >= 100 ? '#10b981' : '#6366f1'}" rx="3" />
+          </svg>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  // Top Outstanding Dues Cards (Clickable for 1-tap collection)
+  const dueList = (mData.invoices || [])
+    .map((inv, idx) => {
+      const col = Object.values(inv.daily || {}).reduce((a, b) => a + (Number(b) || 0), 0);
+      return { ...inv, idx, col, due: (Number(inv.sales) || 0) - col };
+    })
+    .filter(x => x.due > 0)
+    .sort((a, b) => b.due - a.due)
+    .slice(0, 6);
+
+  document.getElementById('dashDuesList').innerHTML = dueList.length
+    ? dueList.map(d => `
+        <div onclick="openPartyModal(${d.idx})" class="bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800 hover:border-emerald-500/40 rounded-xl p-3.5 cursor-pointer transition flex items-center justify-between">
+          <div>
+            <div class="text-[10px] font-bold text-slate-400">Inv #${d.invoice || d.idx + 1}</div>
+            <div class="text-xs sm:text-sm font-bold text-white">${d.customer}</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">Paid: ${fmt(d.col)} / ${fmt(d.sales)}</div>
+          </div>
+          <div class="text-right">
+            <div class="text-xs sm:text-sm font-extrabold text-rose-400">${fmt(d.due)}</div>
+            <span class="inline-block mt-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">+ Collect</span>
+          </div>
+        </div>
+      `).join('')
+    : `<div class="col-span-full text-center py-6 text-xs text-slate-400">No pending dues for ${currentMonth}. Tap "+ Quick Entry" to add a party!</div>`;
+}
+
+function updateTarget(val) {
+  appData[currentMonth].target = Number(val) || 0;
+  saveData('Target updated');
+}
+
+// ==================== RENDER PARTIES & COLLECTION ====================
+function setInvFilter(f) {
+  invFilter = f;
+  document.querySelectorAll('.filter-pill').forEach(btn => {
+    const active = btn.dataset.filter === f;
+    btn.className = active
+      ? 'filter-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500 text-slate-950'
+      : 'filter-pill px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white';
+  });
+  renderInvoices();
+}
+
+function renderInvoices() {
+  const mData = appData[currentMonth];
+  const q = (document.getElementById('searchCust').value || '').toLowerCase().trim();
+  let totalCol = 0, totalDue = 0;
+
+  const filtered = (mData.invoices || []).map((inv, idx) => {
+    const col = Object.values(inv.daily || {}).reduce((a, b) => a + (Number(b) || 0), 0);
+    const sales = Number(inv.sales) || 0;
+    const due = sales - col;
+    totalCol += col;
+    totalDue += due;
+    return { ...inv, idx, col, sales, due };
+  }).filter(item => {
+    if (q && !item.customer.toLowerCase().includes(q) && !String(item.invoice).includes(q)) return false;
+    if (invFilter === 'due' && item.due <= 0) return false;
+    if (invFilter === 'paid' && item.due > 0) return false;
+    return true;
+  });
+
+  document.getElementById('invStripCol').textContent = fmt(totalCol);
+  document.getElementById('invStripDue').textContent = fmt(totalDue);
+
+  document.getElementById('partyCardsGrid').innerHTML = filtered.length
+    ? filtered.map(p => {
+        const pct = p.sales > 0 ? Math.min(100, (p.col / p.sales) * 100) : 100;
+        const paidDaysCount = Object.keys(p.daily || {}).length;
+        return `
+          <div onclick="openPartyModal(${p.idx})" class="glass-card rounded-2xl p-4 cursor-pointer flex flex-col justify-between">
+            <div>
+              <div class="flex items-start justify-between gap-2">
+                <div>
+                  <span class="text-[10px] font-bold text-slate-400 bg-slate-800 px-2 py-0.5 rounded-md">Inv #${p.invoice || p.idx + 1}</span>
+                  <h3 class="text-sm sm:text-base font-bold text-white mt-1.5">${p.customer}</h3>
+                </div>
+                ${p.due <= 0
+                  ? `<span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">CLEARED</span>`
+                  : `<span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-rose-500/15 text-rose-400 border border-rose-500/30">DUE ${fmt(p.due)}</span>`
+                }
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 mt-3 bg-slate-900/80 p-2.5 rounded-xl text-xs">
+                <div>
+                  <span class="text-slate-400 block text-[10px]">Total Bill</span>
+                  <span class="font-bold text-white">${fmt(p.sales)}</span>
+                </div>
+                <div class="text-right">
+                  <span class="text-slate-400 block text-[10px]">Collected (${paidDaysCount}d)</span>
+                  <span class="font-bold text-emerald-400">${fmt(p.col)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-3">
+              <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                <div class="h-full bg-emerald-400 rounded-full" style="width: ${pct}%"></div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('')
+    : `<div class="col-span-full glass-card rounded-2xl p-8 text-center text-xs text-slate-400">No parties match your filter. Click "+ Quick Entry" to add one.</div>`;
+}
+
+// ==================== PARTY COLLECTION MODAL ====================
+function openPartyModal(idx) {
+  editingPartyIdx = idx;
+  const inv = appData[currentMonth].invoices[idx];
+  document.getElementById('pmInvBadge').textContent = `Invoice #${inv.invoice || idx + 1}`;
+  document.getElementById('pmTitle').textContent = inv.customer;
+  document.getElementById('pmEditName').value = inv.customer;
+  document.getElementById('pmEditSales').value = inv.sales;
+
+  // Populate day selector (default to current day of month)
+  const todayDay = Math.min(31, new Date().getDate());
+  const daySel = document.getElementById('pmQuickDay');
+  daySel.innerHTML = Array.from({ length: 31 }, (_, i) => i + 1)
+    .map(d => `<option value="${d}" ${d === todayDay ? 'selected' : ''}>Day ${d}</option>`)
+    .join('');
+
+  // Render 1-31 day grid
+  let gridHtml = '';
+  for (let d = 1; d <= 31; d++) {
+    const val = (inv.daily && inv.daily[String(d)]) || '';
+    const hasVal = Number(val) > 0;
+    gridHtml += `
+      <div id="dayBox_${d}" class="rounded-xl p-2 border transition ${hasVal ? 'bg-emerald-500/15 border-emerald-500/40' : 'bg-slate-900/90 border-slate-800'}">
+        <label class="block text-[10px] font-bold ${hasVal ? 'text-emerald-300' : 'text-slate-400'}">Day ${d}</label>
+        <input type="number" id="pmDay_${d}" value="${val}" placeholder="0" oninput="onDayInputChange(${d})" class="w-full bg-transparent text-xs font-extrabold text-white focus:outline-none mt-0.5" />
+      </div>
+    `;
+  }
+  document.getElementById('pmDaysGrid').innerHTML = gridHtml;
+  recalcPartyModalPreview();
+
+  const modal = document.getElementById('partyModal');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function onDayInputChange(d) {
+  const val = Number(document.getElementById(`pmDay_${d}`).value) || 0;
+  const box = document.getElementById(`dayBox_${d}`);
+  box.className = val > 0
+    ? 'rounded-xl p-2 border transition bg-emerald-500/15 border-emerald-500/40'
+    : 'rounded-xl p-2 border transition bg-slate-900/90 border-slate-800';
+  recalcPartyModalPreview();
+}
+
+function recalcPartyModalPreview() {
+  const bill = Number(document.getElementById('pmEditSales').value) || 0;
+  let col = 0;
+  for (let d = 1; d <= 31; d++) {
+    col += Number(document.getElementById(`pmDay_${d}`).value) || 0;
+  }
+  const due = bill - col;
+  document.getElementById('pmBill').textContent = fmt(bill);
+  document.getElementById('pmCol').textContent = fmt(col);
+  document.getElementById('pmDue').textContent = fmt(due);
+}
+
+function quickAddDayAmount(amt) {
+  const day = document.getElementById('pmQuickDay').value;
+  const input = document.getElementById(`pmDay_${day}`);
+  const currentDayVal = Number(input.value) || 0;
+
+  if (amt === 'full') {
+    const bill = Number(document.getElementById('pmEditSales').value) || 0;
+    let totalCol = 0;
+    for (let d = 1; d <= 31; d++) totalCol += Number(document.getElementById(`pmDay_${d}`).value) || 0;
+    const rem = Math.max(0, bill - totalCol);
+    input.value = currentDayVal + rem;
+  } else {
+    input.value = currentDayVal + Number(amt);
+  }
+  onDayInputChange(day);
+}
+
+function savePartyModal() {
+  const inv = appData[currentMonth].invoices[editingPartyIdx];
+  inv.customer = document.getElementById('pmEditName').value.trim() || inv.customer;
+  inv.sales = Number(document.getElementById('pmEditSales').value) || 0;
+  const daily = {};
+  for (let d = 1; d <= 31; d++) {
+    const v = Number(document.getElementById(`pmDay_${d}`).value) || 0;
+    if (v !== 0) daily[String(d)] = v;
+  }
+  inv.daily = daily;
+  closePartyModal();
+  saveData(`Updated ${inv.customer}`);
+}
+
+function deleteCurrentParty() {
+  const inv = appData[currentMonth].invoices[editingPartyIdx];
+  appData[currentMonth].invoices.splice(editingPartyIdx, 1);
+  closePartyModal();
+  saveData(`Removed ${inv.customer}`);
+}
+
+function closePartyModal() {
+  const modal = document.getElementById('partyModal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+
+// ==================== HONORARIUM & GAVICOOL ====================
+function renderHonorarium() {
+  const mData = appData[currentMonth];
+  const m = computeMetrics(mData);
+  document.getElementById('honTotalBenefit').textContent = fmt(m.products10Pct);
+
+  document.getElementById('honorariumCardsGrid').innerHTML = (mData.honorarium || []).map((h, idx) => {
+    const sales = (h.entries || []).reduce((s, e) => s + (Number(e.sales) || 0), 0);
+    const target = Number(h.target) || 0;
+    const need = target - sales;
+    const pct = target > 0 ? Math.min(100, (sales / target) * 100) : 0;
+
+    return `
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm sm:text-base font-bold text-white">${h.name}</h3>
+            <span class="text-xs font-extrabold ${need <= 0 ? 'text-emerald-400' : 'text-amber-400'}">
+              ${need <= 0 ? '✓ Achieved' : `Need ${fmt(need)}`}
+            </span>
+          </div>
+          <div class="flex justify-between text-xs text-slate-400 mt-2">
+            <span>Sales: <strong class="text-white">${fmt(sales)}</strong></span>
+            <span>Target: ${fmt(target)}</span>
+          </div>
+          <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden mt-2">
+            <div class="h-full ${need <= 0 ? 'bg-emerald-400' : 'bg-indigo-500'} rounded-full" style="width:${pct}%"></div>
+          </div>
+        </div>
+        <div class="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between">
+          <span class="text-[11px] text-emerald-400 font-semibold">10% Profit: ${fmt(sales * 0.1)}</span>
+          <button onclick="openHonModal(${idx})" class="text-xs font-bold bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-xl border border-slate-700 transition">+ Add / Edit Sales</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Gavicool 8% Box Cards
+  if (!mData.gavicoolBoxesSold) mData.gavicoolBoxesSold = [0, 0, 0, 0];
+  let totalDueBoxes = 0;
+
+  document.getElementById('gavicoolCardsGrid').innerHTML = (mData.honorarium || []).map((h, idx) => {
+    const sales = (h.entries || []).reduce((s, e) => s + (Number(e.sales) || 0), 0);
+    const gav8 = sales * 0.08;
+    const needBox = gav8 / 264;
+    const soldBox = Number(mData.gavicoolBoxesSold[idx]) || 0;
+    const dueBox = needBox - soldBox;
+    totalDueBoxes += Math.max(0, dueBox);
+
+    return `
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
+        <div>
+          <h4 class="text-xs sm:text-sm font-bold text-white">${h.name}</h4>
+          <div class="text-[11px] text-slate-400 mt-0.5">8% Target: <strong class="text-slate-200">${fmt(gav8)}</strong> (${needBox.toFixed(1)} box)</div>
+        </div>
+
+        <div class="flex items-center justify-between bg-slate-950/80 border border-slate-800 rounded-xl p-2">
+          <button onclick="stepGavicool(${idx}, -1)" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-bold">−</button>
+          <div class="text-center">
+            <div class="text-sm font-extrabold text-emerald-400">${soldBox}</div>
+            <div class="text-[9px] uppercase text-slate-400">Sold Boxes</div>
+          </div>
+          <button onclick="stepGavicool(${idx}, 1)" class="w-8 h-8 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold">+</button>
+        </div>
+
+        <div class="flex justify-between text-xs pt-1">
+          <span class="text-slate-400">Remaining:</span>
+          <span class="font-extrabold ${dueBox <= 0 ? 'text-emerald-400' : 'text-amber-400'}">${dueBox <= 0 ? 'Completed' : dueBox.toFixed(2) + ' Box'}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('gavTotalDueBox').textContent = totalDueBoxes.toFixed(2);
+}
+
+function stepGavicool(idx, delta) {
+  const arr = appData[currentMonth].gavicoolBoxesSold;
+  arr[idx] = Math.max(0, (Number(arr[idx]) || 0) + delta);
+  saveData('Gavicool boxes updated');
+}
+
+function openHonModal(idx) {
+  editingHonIdx = idx;
+  const h = appData[currentMonth].honorarium[idx];
+  document.getElementById('honModalTitle').textContent = h.name;
+  document.getElementById('hmName').value = h.name;
+  document.getElementById('hmTarget').value = h.target;
+  document.getElementById('hmNewDate').value = new Date().toISOString().slice(0, 10);
+  renderHonEntries();
+
+  const modal = document.getElementById('honModal');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function renderHonEntries() {
+  const h = appData[currentMonth].honorarium[editingHonIdx];
+  document.getElementById('hmEntriesList').innerHTML = (h.entries || []).length
+    ? h.entries.map((e, i) => `
+        <div class="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs">
+          <span class="text-slate-300 font-medium">${e.date}</span>
+          <div class="flex items-center gap-2">
+            <input type="number" value="${e.sales}" onchange="appData[currentMonth].honorarium[editingHonIdx].entries[${i}].sales=Number(this.value)||0" class="w-24 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-right font-bold text-emerald-400" />
+            <button onclick="appData[currentMonth].honorarium[editingHonIdx].entries.splice(${i},1);renderHonEntries()" class="text-rose-400 hover:text-rose-300 font-bold px-1">✕</button>
+          </div>
+        </div>
+      `).join('')
+    : `<div class="text-center py-4 text-xs text-slate-400">No sales dates recorded yet.</div>`;
+}
+
+function addHonEntry() {
+  const dt = document.getElementById('hmNewDate').value;
+  const sl = Number(document.getElementById('hmNewSales').value) || 0;
+  if (!dt || sl <= 0) return;
+  appData[currentMonth].honorarium[editingHonIdx].entries.push({ date: dt, sales: sl });
+  document.getElementById('hmNewSales').value = '';
+  renderHonEntries();
+}
+
+function saveHonModal() {
+  const h = appData[currentMonth].honorarium[editingHonIdx];
+  h.name = document.getElementById('hmName').value.trim() || h.name;
+  h.target = Number(document.getElementById('hmTarget').value) || 0;
+  closeHonModal();
+  saveData(`Updated ${h.name}`);
+}
+
+function closeHonModal() {
+  const modal = document.getElementById('honModal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+
+// ==================== MONTHLY SALES & PROFIT ====================
+function renderSalesAndProfit() {
+  const mData = appData[currentMonth];
+  let tCr = 0, tCa = 0, tPa = 0, tDu = 0, tTo = 0;
+
+  document.getElementById('monthlySalesBody').innerHTML = (mData.monthlySales || []).length
+    ? mData.monthlySales.map((s, idx) => {
+        const cr = Number(s.credit) || 0;
+        const ca = Number(s.cash) || 0;
+        const pa = Number(s.paid) || 0;
+        const du = ca - pa;
+        const tot = cr + ca;
+        tCr += cr; tCa += ca; tPa += pa; tDu += du; tTo += tot;
+        return `
+          <tr class="hover:bg-slate-800/40">
+            <td class="py-2.5 px-2 font-medium text-slate-300 whitespace-nowrap">${s.date}</td>
+            <td class="py-2.5 px-2 text-right font-semibold text-white">${fmt(cr)}</td>
+            <td class="py-2.5 px-2 text-right font-semibold text-white">${fmt(ca)}</td>
+            <td class="py-2.5 px-2 text-right font-semibold text-emerald-400">${fmt(pa)}</td>
+            <td class="py-2.5 px-2 text-right font-bold ${du > 0 ? 'text-rose-400' : 'text-slate-500'}">${fmt(du)}</td>
+            <td class="py-2.5 px-2 text-right font-extrabold text-indigo-300">${fmt(tot)}</td>
+            <td class="py-2.5 px-2 text-right">
+              <button onclick="appData[currentMonth].monthlySales.splice(${idx},1);saveData('Entry deleted')" class="text-slate-500 hover:text-rose-400 font-bold">✕</button>
+            </td>
+          </tr>
+        `;
+      }).join('')
+    : `<tr><td colspan="7" class="py-6 text-center text-xs text-slate-400">No daily sales recorded yet. Click "+ Add Daily Sale".</td></tr>`;
+
+  document.getElementById('monthlySalesFoot').innerHTML = `
+    <tr>
+      <td class="py-3 px-2 text-slate-300">TOTAL</td>
+      <td class="py-3 px-2 text-right text-white">${fmt(tCr)}</td>
+      <td class="py-3 px-2 text-right text-white">${fmt(tCa)}</td>
+      <td class="py-3 px-2 text-right text-emerald-400">${fmt(tPa)}</td>
+      <td class="py-3 px-2 text-right text-rose-400">${fmt(tDu)}</td>
+      <td class="py-3 px-2 text-right text-indigo-300">${fmt(tTo)}</td>
+      <td></td>
+    </tr>
+  `;
+
+  // Losses
+  const m = computeMetrics(mData);
+  document.getElementById('lossList').innerHTML = (mData.losses || []).map((l, idx) => `
+    <div class="flex items-center justify-between bg-slate-900/90 border border-slate-800 rounded-xl px-3 py-2 text-xs">
+      <span class="text-slate-200 font-medium">${l.name}</span>
+      <div class="flex items-center gap-2">
+        <input type="number" value="${l.amount}" onchange="appData[currentMonth].losses[${idx}].amount=Number(this.value)||0;saveData('Loss updated')" class="w-24 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-right font-bold text-rose-400" />
+        <button onclick="appData[currentMonth].losses.splice(${idx},1);saveData('Removed')" class="text-slate-500 hover:text-rose-400">✕</button>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('totalLossVal').textContent = fmt(m.totalLoss);
+
+  // Profits
+  document.getElementById('profitList').innerHTML = `
+    <div class="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/25 rounded-xl px-3 py-2 text-xs">
+      <span class="text-emerald-300 font-semibold">Products 10% (Auto from Honorarium)</span>
+      <span class="font-extrabold text-emerald-400">${fmt(m.products10Pct)}</span>
+    </div>
+  ` + (mData.profits || []).map((p, idx) => `
+    <div class="flex items-center justify-between bg-slate-900/90 border border-slate-800 rounded-xl px-3 py-2 text-xs">
+      <span class="text-slate-200 font-medium">${p.name}</span>
+      <div class="flex items-center gap-2">
+        <input type="number" value="${p.amount}" onchange="appData[currentMonth].profits[${idx}].amount=Number(this.value)||0;saveData('Profit updated')" class="w-24 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-right font-bold text-emerald-400" />
+        <button onclick="appData[currentMonth].profits.splice(${idx},1);saveData('Removed')" class="text-slate-500 hover:text-rose-400">✕</button>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('totalProfitVal').textContent = fmt(m.totalProfit);
+}
+
+function addLossItem() {
+  appData[currentMonth].losses.push({ name: 'New Expense', amount: 0 });
+  saveData('Added expense row');
+}
+
+function addProfitItem() {
+  appData[currentMonth].profits.push({ name: 'Extra Bonus', amount: 0 });
+  saveData('Added profit row');
+}
+
+// ==================== QUICK ENTRY MODAL (FAB) ====================
+function openQuickModal(defaultMode = 'collection') {
+  const mData = appData[currentMonth];
+  const partySel = document.getElementById('qColParty');
+  partySel.innerHTML = (mData.invoices || []).length
+    ? mData.invoices.map((inv, idx) => {
+        const col = Object.values(inv.daily || {}).reduce((a, b) => a + (Number(b) || 0), 0);
+        const due = (Number(inv.sales) || 0) - col;
+        return `<option value="${idx}">#${inv.invoice || idx+1} ${inv.customer} (Due: ${fmt(due)})</option>`;
+      }).join('')
+    : `<option value="">No parties yet — switch to "New Party"</option>`;
+
+  document.getElementById('qColDay').value = Math.min(31, new Date().getDate());
+  document.getElementById('qColAmt').value = '';
+  document.getElementById('qInvNo').value = (mData.invoices || []).length + 1;
+  document.getElementById('qInvName').value = '';
+  document.getElementById('qInvSales').value = '';
+  document.getElementById('qInvPaid').value = '';
+  document.getElementById('qSaleDate').value = new Date().toISOString().slice(0, 10);
+
+  setQuickMode((mData.invoices || []).length === 0 && defaultMode === 'collection' ? 'invoice' : defaultMode);
+  const modal = document.getElementById('quickModal');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function setQuickMode(mode) {
+  ['collection', 'invoice', 'sale'].forEach(m => {
+    document.getElementById('qform-' + m).classList.toggle('hidden', m !== mode);
+  });
+  document.querySelectorAll('.qmode-btn').forEach(btn => {
+    const active = btn.dataset.qmode === mode;
+    btn.className = active
+      ? 'qmode-btn py-2 rounded-lg text-xs font-bold bg-emerald-500 text-slate-950'
+      : 'qmode-btn py-2 rounded-lg text-xs font-bold text-slate-400';
+  });
+}
+
+function submitQuickCollection() {
+  const idx = document.getElementById('qColParty').value;
+  const day = String(Number(document.getElementById('qColDay').value) || 1);
+  const amt = Number(document.getElementById('qColAmt').value) || 0;
+  if (idx === '' || amt <= 0) return;
+
+  const inv = appData[currentMonth].invoices[Number(idx)];
+  if (!inv.daily) inv.daily = {};
+  inv.daily[day] = (Number(inv.daily[day]) || 0) + amt;
+
+  closeQuickModal();
+  saveData(`Collected ${fmt(amt)} from ${inv.customer}`);
+}
+
+function submitQuickInvoice() {
+  const invNo = Number(document.getElementById('qInvNo').value) || 1;
+  const name = document.getElementById('qInvName').value.trim();
+  const sales = Number(document.getElementById('qInvSales').value) || 0;
+  const paid = Number(document.getElementById('qInvPaid').value) || 0;
+  if (!name) return;
+
+  const daily = {};
+  if (paid > 0) daily[String(Math.min(31, new Date().getDate()))] = paid;
+
+  appData[currentMonth].invoices.push({ invoice: invNo, customer: name, sales, daily });
+  closeQuickModal();
+  saveData(`Added ${name}`);
+}
+
+function submitQuickSale() {
+  const date = document.getElementById('qSaleDate').value;
+  const credit = Number(document.getElementById('qSaleCredit').value) || 0;
+  const cash = Number(document.getElementById('qSaleCash').value) || 0;
+  const paid = Number(document.getElementById('qSalePaid').value) || 0;
+  if (!date) return;
+
+  appData[currentMonth].monthlySales.push({ date, credit, cash, paid });
+  closeQuickModal();
+  saveData('Daily sale added');
+}
+
+function closeQuickModal() {
+  const modal = document.getElementById('quickModal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+
+// ==================== NEW MONTH & BACKUP MODALS ====================
+function openNewMonthModal() {
+  document.getElementById('nmName').value = '';
+  document.getElementById('nmFromMonth').textContent = currentMonth;
+  const modal = document.getElementById('newMonthModal');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function closeNewMonthModal() {
+  const modal = document.getElementById('newMonthModal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+
+function createNewMonth() {
+  const name = document.getElementById('nmName').value.trim();
+  if (!name || appData[name]) return;
+
+  const copyDues = document.getElementById('nmCopyParties').checked;
+  const prev = appData[currentMonth];
+  const carriedInvoices = [];
+
+  if (copyDues && prev && prev.invoices) {
+    prev.invoices.forEach((inv, i) => {
+      const col = Object.values(inv.daily || {}).reduce((a, b) => a + (Number(b) || 0), 0);
+      const due = (Number(inv.sales) || 0) - col;
+      if (due > 0) {
+        carriedInvoices.push({
+          invoice: carriedInvoices.length + 1,
+          customer: inv.customer,
+          sales: due,
+          daily: {}
+        });
+      }
+    });
+  }
+
+  appData[name] = {
+    target: prev ? prev.target : 209461,
+    invoices: carriedInvoices,
+    honorarium: [
+      { name: 'Sohel Pharmacy', target: 24000, entries: [] },
+      { name: 'Susanto Pharmacy', target: 24000, entries: [] },
+      { name: 'Sumon med Hall 2', target: 12000, entries: [] },
+      { name: 'Life Pharma', target: 12000, entries: [] }
+    ],
+    monthlySales: [],
+    losses: [
+      { name: 'Shepon+Boss', amount: 0 },
+      { name: 'Sohel+Sun', amount: 0 },
+      { name: 'Sumon 2', amount: 0 },
+      { name: 'Baishakhi+ Muzahid', amount: 0 },
+      { name: 'Life+Bhai bahi', amount: 0 }
+    ],
+    profits: [
+      { name: 'Sample', amount: 0 },
+      { name: 'Others', amount: 0 }
+    ],
+    gavicoolBoxesSold: [0, 0, 0, 0]
+  };
+
+  currentMonth = name;
+  initMonthDropdown();
+  closeNewMonthModal();
+  saveData(`Created ${name}`);
+}
+
+function openSettingsModal() {
+  const modal = document.getElementById('settingsModal');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function closeSettingsModal() {
+  const modal = document.getElementById('settingsModal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+
+function exportCSV() {
+  const mData = appData[currentMonth];
+  let csv = `Pharmasia Hisab - ${currentMonth}\nInvoice,Customer,Sales,Collected,Dues\n`;
+  (mData.invoices || []).forEach(inv => {
+    const col = Object.values(inv.daily || {}).reduce((a, b) => a + (Number(b) || 0), 0);
+    csv += `${inv.invoice},"${inv.customer}",${inv.sales},${col},${inv.sales - col}\n`;
+  });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  a.download = `Pharmasia_${currentMonth.replace(/\s+/g, '_')}.csv`;
+  a.click();
+  showToast('CSV Downloaded');
+}
+
+function exportJSON() {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(appData, null, 2)], { type: 'application/json' }));
+  a.download = `Pharmasia_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  showToast('JSON Backup Saved');
+}
+
+function importJSON(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const parsed = JSON.parse(ev.target.result);
+      if (parsed && typeof parsed === 'object') {
+        appData = parsed;
+        currentMonth = Object.keys(appData)[0];
+        initMonthDropdown();
+        closeSettingsModal();
+        saveData('Backup restored!');
+      }
+    } catch (err) {
+      showToast('Invalid JSON file');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function resetToOriginal() {
+  appData = JSON.parse(JSON.stringify(INITIAL_DATA));
+  currentMonth = "October 2026";
+  initMonthDropdown();
+  closeSettingsModal();
+  saveData('Reset to Excel data');
+}
+
+function renderAll() {
+  renderDashboard();
+  renderInvoices();
+  renderHonorarium();
+  renderSalesAndProfit();
+}
+
+// Initialize App
+setupPwaSupport();
+initMonthDropdown();
+renderAll();
+setSyncBadge('Local Only', navigator.onLine ? 'Local Only' : 'Offline');
+if (window.__PHARMASIA_FIREBASE__) {
+  initCloudSyncIfConfigured();
+} else {
+  window.addEventListener('pharmasia-firebase-ready', initCloudSyncIfConfigured, { once: true });
+}
+</script>
+</body>
+</html>
