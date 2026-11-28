@@ -17,3 +17,13 @@ MONTHLY COST TAB (notun):
   Alada "Monthly Cost" tab: protita khoroch er date, category, amount ar note (kno ei cost holo).
   Category: Meal, Travel, Hand Cost, House+Wifi+Pharia, Other. Protita category r mashik limit box e edit kora jay.
   July ar August er data Monthly_Cost.xlsx theke import kora ache. CSV export ar backup/sync e cost o thake.
+
+UPDATE (premium):
+  - Notun icon (capsule + gold ring), header logo o capsule.
+  - Monthly Cost tab premium design: hero total + progress ring, category split, daily spend graph, category budget cards, notes list.
+  - "Download All" button (Monthly Cost tab ar Settings e): ek click e shob month er shob data ek Excel (.xlsx) file e,
+    7 ta sheet: Summary, Parties, Daily Sales, Honorarium, Loss & Profit, Monthly Cost, Cost Budget.
+  - Loss ar Profit row er naam ekhon edit kora jay.
+
+UPDATE KORAR NIYOM: host kora jaygay (Netlify/GitHub) purano file gulo replace koro, tarpor phone e app ta bondho kore abar kholo.
+  Na bodlale browser/app e purano version cache theke dekhabe.

@@ -1,5 +1,5 @@
 // Pharmasia Hisab service worker: app shell + CDN files cached for offline use.
-const CACHE = 'pharmasia-v4';
+const CACHE = 'pharmasia-v6';
 const SHELL = ['./', './pharmasia_hisab_app.html', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 const CDN_HOSTS = ['cdn.tailwindcss.com', 'fonts.googleapis.com', 'fonts.gstatic.com', 'www.gstatic.com'];
 
