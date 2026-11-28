@@ -1,23 +1,22 @@
 {
-  "id": "./",
   "name": "Pharmasia Hisab",
-  "short_name": "Pharmasia",
-  "description": "Territory sales, party dues, honorarium and Gavicool tracker",
+  "short_name": "Hisab",
+  "description": "Territory accounting: party dues, collection, honorarium and Gavicool.",
   "start_url": "./pharmasia_hisab_app.html",
   "scope": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#090d16",
   "theme_color": "#10b981",
-  "orientation": "any",
   "icons": [
     {
-      "src": "./icon-192.png",
+      "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "./icon-512.png",
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

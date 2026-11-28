@@ -1,17 +1,30 @@
-const CACHE_NAME = 'pharmasia-hisab-v2';
-const APP_SHELL = ['./', './pharmasia_hisab_app.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
-self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));
+// Pharmasia Hisab service worker: app shell + CDN files cached for offline use.
+const CACHE = 'pharmasia-v4';
+const SHELL = ['./', './pharmasia_hisab_app.html', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
+const CDN_HOSTS = ['cdn.tailwindcss.com', 'fonts.googleapis.com', 'fonts.gstatic.com', 'www.gstatic.com'];
+
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
 });
-self.addEventListener('activate', event => {
-  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
-self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET') return;
-  const url = new URL(event.request.url);
-  if (url.origin !== self.location.origin) return;
-  event.respondWith(fetch(event.request).then(response => {
-    if (response && response.ok) { const copy=response.clone(); caches.open(CACHE_NAME).then(cache=>cache.put(event.request,copy)); }
-    return response;
-  }).catch(() => caches.match(event.request).then(cached => cached || caches.match('./pharmasia_hisab_app.html'))));
+self.addEventListener('fetch', e => {
+  const req = e.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  const sameOrigin = url.origin === self.location.origin;
+  if (!sameOrigin && !CDN_HOSTS.includes(url.hostname)) return;   // Firebase / Firestore / Google login: always network
+  if (req.mode === 'navigate') {
+    e.respondWith(fetch(req).then(res => { const cp = res.clone(); caches.open(CACHE).then(c => c.put(req, cp)); return res; })
+      .catch(() => caches.match(req).then(m => m || caches.match('./pharmasia_hisab_app.html'))));
+    return;
+  }
+  e.respondWith(caches.match(req).then(hit => {
+    const net = fetch(req).then(res => {
+      if (res && (res.ok || res.type === 'opaque')) { const cp = res.clone(); caches.open(CACHE).then(c => c.put(req, cp)); }
+      return res;
+    }).catch(() => hit);
+    return hit || net;
+  }));
 });
